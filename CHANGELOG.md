@@ -7,9 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `buildRequestURL` function to generate request URL to access OneWaySMS API.
+
 ### Updated
 
 - Improve README.md formatting.
+- Improve type for request URL params.
 
 ## [0.1.1] - 2020-05-29
 
