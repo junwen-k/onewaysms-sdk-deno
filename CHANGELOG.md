@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Updated
 
 - Tests to include request failure assertion.
+- README.md URL example when importing module.
 
 ## [0.1.0] - 2020-05-25
 
