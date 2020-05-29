@@ -10,7 +10,7 @@ A non official OneWaySMS SDK written for Deno runtime. Based on the latest [v1.3
 import {
   OneWay,
   OneWayError,
-} from "https://raw.githubusercontent.com/junwen-k/onewaysms/master/mod.ts";
+} from "https://deno.land/x/gh:junwen-k:onewaysms-sdk-deno/mod.ts";
 ```
 
 1. Initializing a new client.
