@@ -2,6 +2,7 @@
 import {
   listenAndServe,
   ServerRequest,
+  Status,
 } from "https://deno.land/std/http/mod.ts";
 import { decode } from "https://deno.land/std/node/querystring.ts";
 import { HOSTNAME, PORT } from "./_mock_config.ts";
@@ -52,6 +53,10 @@ listenAndServe(
       }
       if (message === "unknown error") {
         req.respond({ body: "random" });
+        return;
+      }
+      if (message === "request failure") {
+        req.respond({ status: Status.InternalServerError });
         return;
       }
       if (mobileno === "60123456789,60129876543") {

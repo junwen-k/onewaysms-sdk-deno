@@ -1,4 +1,5 @@
 // Copyright 2020 KwanJunWen. All rights reserved. MIT license.
+import { Status } from "https://deno.land/std/http/mod.ts";
 import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
 import { OneWay } from "./oneway.ts";
 import {
@@ -41,6 +42,31 @@ Deno.test("OneWay:sendSMS -> With multiple mobileNo", async () => {
     assertEquals(data.mtIDs, [145712468, 145712469]);
   } catch (err) {
     assert(!err);
+  }
+});
+
+Deno.test("OneWay:sendSMS -> With request failure", async () => {
+  const svc = new OneWay({
+    baseURL: `http://${HOSTNAME}:${PORT}`,
+    apiUsername: "Username",
+    apiPassword: "Password",
+    senderID: "SenderID",
+  });
+  try {
+    const data = await svc.sendSMS({
+      message: "request failure",
+      mobileNo: "60123456789",
+    });
+    assert(!data.mtIDs);
+  } catch (err) {
+    assertEquals(
+      err,
+      new OneWayError(
+        "request failure",
+        OneWayErrorType.RequestFailure,
+        Status.InternalServerError,
+      ),
+    );
   }
 });
 
