@@ -161,9 +161,9 @@ export class OneWay implements OneWayClient {
               new OneWayError(
                 "request failure",
                 OneWayErrorType.RequestFailure,
+                resp.status,
               ),
             );
-            return "";
           }
           return resp.text();
         }).then((respText: string): void => {

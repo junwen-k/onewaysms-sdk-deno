@@ -1,4 +1,8 @@
 // Copyright 2020 KwanJunWen. All rights reserved. MIT license.
+import {
+  Status,
+  STATUS_TEXT,
+} from "https://deno.land/std/http/mod.ts";
 /**
  * OneWay specific error. Switch based on code to handle specific error
  * when using OneWayClient.
@@ -20,9 +24,12 @@
  */
 export class OneWayError extends Error {
   readonly code: OneWayErrorType;
+  readonly statusCode: Status;
 
-  constructor(message: string, code: OneWayErrorType) {
-    super(message);
+  constructor(message: string, code: OneWayErrorType, statusCode?: Status) {
+    const _statusCode = statusCode || Status.OK;
+    super(`${statusCode} (${STATUS_TEXT.get(_statusCode)}): ${message}`);
+    this.statusCode = _statusCode;
     this.name = "OneWayError";
     this.code = code;
   }
