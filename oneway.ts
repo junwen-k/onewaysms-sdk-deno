@@ -19,6 +19,7 @@ import {
   OneWayError,
   OneWayErrorType,
 } from "./error.ts";
+import { version } from "./mod.json";
 
 // Based on specifications found in http://smsd2.onewaysms.sg/api.pdf.
 export class OneWay implements OneWayClient {
@@ -117,6 +118,17 @@ export class OneWay implements OneWayClient {
   }
 
   /**
+   * Calls "GET" request with User-Agent set to this client library.
+   */
+  private async getRequest(requestURL: string): Promise<Response> {
+    const headers = new Headers();
+    headers.append("User-Agent", `onewaysms-sdk-deno/${version}`);
+    return fetch(requestURL, {
+      headers,
+    });
+  }
+
+  /**
    * Initiate send SMS request. SMS's language type will be automatically set unless it is
    * defined in the SMS request structure.
    *
@@ -165,7 +177,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildSendSMSRequestURL(input);
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL).then((resp) => {
+        this.getRequest(requestURL).then((resp) => {
           if (!resp.ok) {
             rej(
               new OneWayError(
@@ -295,7 +307,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildCheckTransactionStatusRequestURL(input);
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL)
+        this.getRequest(requestURL)
           .then((resp) => resp.text())
           .then((respText: string): void => {
             const status = parseInt(respText);
@@ -368,7 +380,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildCheckCreditBalanceRequestURL();
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL)
+        this.getRequest(requestURL)
           .then((resp) => resp.text())
           .then((respText: string): void => {
             const creditBalance = parseInt(respText);
