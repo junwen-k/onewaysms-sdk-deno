@@ -1,19 +1,25 @@
 // Copyright 2020 KwanJunWen. All rights reserved. MIT license.
 import {
   CheckCreditBalanceOutput,
+  CheckCreditBalanceURLParams,
   CheckTransactionStatusInput,
   CheckTransactionStatusOutput,
+  CheckTransactionStatusURLParams,
   LanguageType,
   MTTransactionStatus,
   OneWayClient,
   OneWayClientConfig,
+  OneWayURLParams,
+  OneWayURLPath,
   SendSMSInput,
   SendSMSOutput,
+  SendSMSURLParams,
 } from "./types.ts";
 import {
   OneWayError,
   OneWayErrorType,
 } from "./error.ts";
+import { version } from "./mod.json";
 
 // Based on specifications found in http://smsd2.onewaysms.sg/api.pdf.
 export class OneWay implements OneWayClient {
@@ -50,30 +56,40 @@ export class OneWay implements OneWayClient {
   }
 
   /**
+   * Builds request URL to access OneWaySMS API.
+   */
+  private buildRequestURL<T = OneWayURLParams>(
+    path: OneWayURLPath,
+    urlParams: { [P in keyof T]: string },
+  ): string {
+    const { baseURL } = this.config;
+    const params = new URLSearchParams();
+    for (const key in urlParams) {
+      params.set(key, urlParams[key]);
+    }
+    return `${baseURL}/${path}?${params.toString()}`;
+  }
+
+  /**
    * Builds request URL to send mobile terminating message based on SMS provided.
    */
   private buildSendSMSRequestURL(input: SendSMSInput): string {
-    const { baseURL, apiUsername, apiPassword, senderID } = this.config;
-
-    const urlParams = new URLSearchParams();
+    const { apiUsername, apiPassword, senderID } = this.config;
 
     if (!input.languageType) {
       input.languageType = this.getLanguageType(input.message);
     }
 
-    urlParams.set("apiusername", apiUsername);
-    urlParams.set("apipassword", apiPassword);
-    urlParams.set("senderid", senderID);
-    urlParams.set("mobileno", input.mobileNo.toString());
-    urlParams.set("languagetype", input.languageType);
-    urlParams.set(
-      "message",
-      input.languageType === "2"
+    return this.buildRequestURL<SendSMSURLParams>("api.aspx", {
+      apiusername: apiUsername,
+      apipassword: apiPassword,
+      senderid: input.senderID || senderID,
+      mobileno: input.mobileNo.toString(),
+      languagetype: input.languageType,
+      message: input.languageType === "2"
         ? this.messageToHex(input.message)
         : input.message,
-    );
-
-    return `${baseURL}/api.aspx?${urlParams.toString()}`;
+    });
   }
 
   /**
@@ -82,13 +98,10 @@ export class OneWay implements OneWayClient {
   private buildCheckTransactionStatusRequestURL(
     input: CheckTransactionStatusInput,
   ): string {
-    const { baseURL } = this.config;
-
-    const urlParams = new URLSearchParams();
-
-    urlParams.set("mtid", input.mtID.toString());
-
-    return `${baseURL}/bulktrx.aspx?${urlParams.toString()}`;
+    return this.buildRequestURL<CheckTransactionStatusURLParams>(
+      "bulktrx.aspx",
+      { mtid: input.mtID.toString() },
+    );
   }
 
   /**
@@ -96,14 +109,23 @@ export class OneWay implements OneWayClient {
    * from client's config.
    */
   private buildCheckCreditBalanceRequestURL(): string {
-    const { baseURL, apiUsername, apiPassword } = this.config;
+    const { apiUsername, apiPassword } = this.config;
 
-    const urlParams = new URLSearchParams();
+    return this.buildRequestURL<CheckCreditBalanceURLParams>(
+      "bulkcredit.aspx",
+      { apiusername: apiUsername, apipassword: apiPassword },
+    );
+  }
 
-    urlParams.set("apiusername", apiUsername);
-    urlParams.set("apipassword", apiPassword);
-
-    return `${baseURL}/bulkcredit.aspx?${urlParams.toString()}`;
+  /**
+   * Calls "GET" request with User-Agent set to this client library.
+   */
+  private async getRequest(requestURL: string): Promise<Response> {
+    const headers = new Headers();
+    headers.append("User-Agent", `onewaysms-sdk-deno/${version}`);
+    return fetch(requestURL, {
+      headers,
+    });
   }
 
   /**
@@ -155,7 +177,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildSendSMSRequestURL(input);
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL).then((resp) => {
+        this.getRequest(requestURL).then((resp) => {
           if (!resp.ok) {
             rej(
               new OneWayError(
@@ -168,69 +190,76 @@ export class OneWay implements OneWayClient {
           return resp.text();
         }).then((respText: string): void => {
           const mtIDs = respText.split(",").map((t: string) => parseInt(t));
-          if (mtIDs.length > 0) {
-            if (mtIDs[0] > 0) {
-              res({ mtIDs });
+          if (mtIDs.length <= 0) {
+            rej(
+              new OneWayError(
+                "unknown error",
+                OneWayErrorType.UnknownError,
+              ),
+            );
+            return;
+          }
+          if (mtIDs[0] > 0) {
+            res({ mtIDs });
+            return;
+          }
+          switch (mtIDs[0]) {
+            case -100:
+              rej(
+                new OneWayError(
+                  "apiusername or apipassword is invalid",
+                  OneWayErrorType.InvalidCredentials,
+                ),
+              );
               return;
-            }
-            switch (mtIDs[0]) {
-              case -100:
-                rej(
-                  new OneWayError(
-                    "apiusername or apipassword is invalid",
-                    OneWayErrorType.InvalidCredentials,
-                  ),
-                );
-                return;
-              case -200:
-                rej(
-                  new OneWayError(
-                    "senderid parameter is invalid",
-                    OneWayErrorType.InvalidSenderID,
-                  ),
-                );
-                return;
-              case -300:
-                rej(
-                  new OneWayError(
-                    "mobileno parameter is invalid",
-                    OneWayErrorType.InvalidMobileNo,
-                  ),
-                );
-                return;
-              case -400:
-                rej(
-                  new OneWayError(
-                    "languagetype is invalid",
-                    OneWayErrorType.InvalidLanguageType,
-                  ),
-                );
-                return;
-              case -500:
-                rej(
-                  new OneWayError(
-                    "characters in message are invalid",
-                    OneWayErrorType.InvalidMessageCharacters,
-                  ),
-                );
-                return;
-              case -600:
-                rej(
-                  new OneWayError(
-                    "insufficient credit balance",
-                    OneWayErrorType.InsufficientCreditBalance,
-                  ),
-                );
-                return;
-              default:
-                rej(
-                  new OneWayError(
-                    "unknown error",
-                    OneWayErrorType.UnknownError,
-                  ),
-                );
-                return;
-            }
+            case -200:
+              rej(
+                new OneWayError(
+                  "senderid parameter is invalid",
+                  OneWayErrorType.InvalidSenderID,
+                ),
+              );
+              return;
+            case -300:
+              rej(
+                new OneWayError(
+                  "mobileno parameter is invalid",
+                  OneWayErrorType.InvalidMobileNo,
+                ),
+              );
+              return;
+            case -400:
+              rej(
+                new OneWayError(
+                  "languagetype is invalid",
+                  OneWayErrorType.InvalidLanguageType,
+                ),
+              );
+              return;
+            case -500:
+              rej(
+                new OneWayError(
+                  "characters in message are invalid",
+                  OneWayErrorType.InvalidMessageCharacters,
+                ),
+              );
+              return;
+            case -600:
+              rej(
+                new OneWayError(
+                  "insufficient credit balance",
+                  OneWayErrorType.InsufficientCreditBalance,
+                ),
+              );
+              return;
+            default:
+              rej(
+                new OneWayError(
+                  "unknown error",
+                  OneWayErrorType.UnknownError,
+                ),
+              );
+              return;
           }
         })
           .catch(rej);
@@ -278,7 +307,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildCheckTransactionStatusRequestURL(input);
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL)
+        this.getRequest(requestURL)
           .then((resp) => resp.text())
           .then((respText: string): void => {
             const status = parseInt(respText);
@@ -351,7 +380,7 @@ export class OneWay implements OneWayClient {
     const requestURL = this.buildCheckCreditBalanceRequestURL();
     return Promise.resolve(
       new Promise((res, rej) => {
-        fetch(requestURL)
+        this.getRequest(requestURL)
           .then((resp) => resp.text())
           .then((respText: string): void => {
             const creditBalance = parseInt(respText);

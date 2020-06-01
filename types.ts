@@ -7,6 +7,28 @@ export interface OneWayClient {
   checkCreditBalance(): Promise<CheckCreditBalanceOutput>;
 }
 
+/**
+ * URL path to access OneWaySMS API.
+ * "api.aspx" - MT URL path.
+ * "bulktrx.aspx" - Check MT transaction URL path.
+ * "bulkcredit.aspx" - Check credit balance URL path.
+ */
+export type OneWayURLPath = "api.aspx" | "bulktrx.aspx" | "bulkcredit.aspx";
+
+/**
+ * OneWaySMS API request URL parameters.
+ */
+export type OneWayURLParams = Record<
+  | "apiusername"
+  | "apipassword"
+  | "senderid"
+  | "mobileno"
+  | "languagetype"
+  | "message"
+  | "mtid",
+  string
+>;
+
 export interface OneWayClientConfig
   extends OneWayUserCredentials, OneWaySenderID {
   /**
@@ -41,7 +63,17 @@ export interface OneWaySenderID {
  */
 export type LanguageType = "1" | "2";
 
-export interface SendSMSInput {
+export type SendSMSURLParams = Pick<
+  OneWayURLParams,
+  | "apiusername"
+  | "apipassword"
+  | "senderid"
+  | "mobileno"
+  | "languagetype"
+  | "message"
+>;
+
+export interface SendSMSInput extends Partial<OneWaySenderID> {
   /**
    * Language Type of the SMS. Refer to LanguageType for details.
    */
@@ -76,6 +108,8 @@ export interface SendSMSOutput {
   mtIDs: number[];
 }
 
+export type CheckTransactionStatusURLParams = Pick<OneWayURLParams, "mtid">;
+
 export interface CheckTransactionStatusInput {
   /**
    * Mobile terminating ID returned from the send SMS result.
@@ -90,6 +124,11 @@ export interface CheckTransactionStatusOutput {
    */
   status: MTTransactionStatus;
 }
+
+export type CheckCreditBalanceURLParams = Pick<
+  OneWayURLParams,
+  "apiusername" | "apipassword"
+>;
 
 export interface CheckCreditBalanceOutput {
   /**

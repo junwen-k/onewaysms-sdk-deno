@@ -1,6 +1,5 @@
 // Copyright 2020 KwanJunWen. All rights reserved. MIT license.
-import { Status } from "https://deno.land/std/http/mod.ts";
-import { assertEquals, assert } from "https://deno.land/std/testing/asserts.ts";
+import { Status, assertEquals, assert } from "./deps.ts";
 import { OneWay } from "./oneway.ts";
 import {
   OneWayError,
