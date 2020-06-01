@@ -3,11 +3,11 @@ import {
   listenAndServe,
   ServerRequest,
   Status,
-} from "https://deno.land/std/http/mod.ts";
-import { decode } from "https://deno.land/std/node/querystring.ts";
+  decode,
+} from "./deps.ts";
 import { HOSTNAME, PORT } from "./_mock_config.ts";
 
-console.log(`OneWay test server running at http://${HOSTNAME}:${PORT}/`);
+console.log(`OneWaySMS mock server running at http://${HOSTNAME}:${PORT}/`);
 listenAndServe(
   { port: PORT, hostname: HOSTNAME },
   (req: ServerRequest): void => {

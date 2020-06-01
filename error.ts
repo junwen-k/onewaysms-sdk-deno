@@ -2,7 +2,7 @@
 import {
   Status,
   STATUS_TEXT,
-} from "https://deno.land/std/http/mod.ts";
+} from "./deps.ts";
 /**
  * OneWay specific error. Switch based on code to handle specific error
  * when using OneWayClient.
