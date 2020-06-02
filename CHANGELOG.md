@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Improve README.md formatting.
+
+### Removed
+
+- `mod.json` and include constant in `oneway.ts` instead.
+
 ## [0.1.2] - 2020-06-01
 
 ### Added
