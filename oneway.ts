@@ -19,7 +19,11 @@ import {
   OneWayError,
   OneWayErrorType,
 } from "./error.ts";
-import { version } from "./mod.json";
+
+/**
+ * SDK Version constant.
+ */
+const VERSION = "0.1.2";
 
 // Based on specifications found in http://smsd2.onewaysms.sg/api.pdf.
 export class OneWay implements OneWayClient {
@@ -122,7 +126,7 @@ export class OneWay implements OneWayClient {
    */
   private async getRequest(requestURL: string): Promise<Response> {
     const headers = new Headers();
-    headers.append("User-Agent", `onewaysms-sdk-deno/${version}`);
+    headers.set("User-Agent", `onewaysms-sdk-deno/${VERSION}`);
     return fetch(requestURL, {
       headers,
     });
