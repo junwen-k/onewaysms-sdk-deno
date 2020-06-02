@@ -1,33 +1,47 @@
 # OneWaySMS SDK for Deno
 
-A non official OneWaySMS SDK written for Deno runtime. Based on the latest [v1.3](http://smsd2.onewaysms.sg/api.pdf) OneWaySMS API documentation.
+A non-official OneWaySMS SDK written for Deno runtime. Based on the latest [v1.3](http://smsd2.onewaysms.sg/api.pdf) OneWaySMS API documentation.
 
 [![license](https://img.shields.io/github/license/junwen-k/onewaysms-sdk-deno)](https://raw.githubusercontent.com/junwen-k/onewaysms-sdk-deno/master/LICENSE.txt)
 
 ## Installing
 
-1. Import the SDK by using an URL.
+Import the SDK by using a URL.
 
-   ```ts
-   import {
-     OneWay,
-     OneWayError,
-     OneWayErrorType,
-   } from "https://deno.land/x/gh:junwen-k:onewaysms-sdk-deno/mod.ts";
-   ```
+```ts
+import {
+  OneWay,
+  OneWayError,
+  OneWayErrorType,
+} from "https://deno.land/x/gh:junwen-k:onewaysms-sdk-deno/mod.ts";
+```
 
-1. Initializing a new client.
+Include the version tag in the URL to install a specific version of the SDK.
 
-   ```ts
-   const svc = new OneWay({
-     baseURL: "API_BASE_URL",
-     apiUsername: "API_USERNAME",
-     apiPassword: "API_PASSWORD",
-     senderID: "SENDER_ID",
-   });
-   ```
+```ts
+import {
+  OneWay,
+  OneWayError,
+  OneWayErrorType,
+} from "https://deno.land/x/gh:junwen-k:onewaysms-sdk-deno@v0.1.0/mod.ts";
+```
 
 ## Usage and Getting Started
+
+### Initializing a new client
+
+Initialize a new client with the exported `OneWay` class. For instance:
+
+```ts
+const svc = new OneWay({
+  baseURL: "API_BASE_URL",
+  apiUsername: "API_USERNAME",
+  apiPassword: "API_PASSWORD",
+  senderID: "SENDER_ID",
+});
+```
+
+### Use case examples
 
 1. **Send SMS** - Send SMS by calling OneWaySMS API gateway, returning mobile terminating ID(s) if request is successful.
 
@@ -70,7 +84,7 @@ A non official OneWaySMS SDK written for Deno runtime. Based on the latest [v1.3
 
    ```ts
    try {
-     const data = await svc.checkTransactionStatus({ mtID: MT_ID });
+     const data = await svc.checkTransactionStatus({ mtID: 145712470 });
      switch (data.status) {
        case MTTransactionStatus.Success:
        // Handle success status
